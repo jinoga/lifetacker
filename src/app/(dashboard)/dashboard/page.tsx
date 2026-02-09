@@ -16,6 +16,11 @@ interface Goal {
     deadline: string;
 }
 
+interface SalarySettings {
+    monthly_salary: number;
+    salary_date: number;
+}
+
 async function getStats() {
     try {
         const [
@@ -25,6 +30,8 @@ async function getStats() {
             goalsResult,
             expensesResult,
             wishlistResult,
+            salaryResult,
+            investmentResult,
         ] = await Promise.all([
             sql`SELECT COUNT(*) as count FROM tasks WHERE status = 'pending'`,
             sql`SELECT COUNT(*) as count FROM tasks WHERE status = 'completed'`,
@@ -32,6 +39,8 @@ async function getStats() {
             sql`SELECT COUNT(*) as count FROM goals`,
             sql`SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE date >= DATE_TRUNC('month', CURRENT_DATE)`,
             sql`SELECT COUNT(*) as count FROM wishlist WHERE purchased = false`,
+            sql`SELECT monthly_salary, salary_date FROM salary_settings LIMIT 1`,
+            sql`SELECT COALESCE(SUM(value_thb), 0) as total FROM investments`,
         ]);
 
         return {
@@ -41,6 +50,8 @@ async function getStats() {
             goals: Number(goalsResult.rows[0]?.count || 0),
             monthlyExpenses: Number(expensesResult.rows[0]?.total || 0),
             wishlistItems: Number(wishlistResult.rows[0]?.count || 0),
+            salarySettings: salaryResult.rows[0] as unknown as SalarySettings | undefined,
+            totalInvestments: Number(investmentResult.rows[0]?.total || 0),
         };
     } catch {
         return {
@@ -50,6 +61,8 @@ async function getStats() {
             goals: 0,
             monthlyExpenses: 0,
             wishlistItems: 0,
+            salarySettings: undefined,
+            totalInvestments: 0,
         };
     }
 }
@@ -89,10 +102,49 @@ async function getActiveGoals(): Promise<Goal[]> {
     }
 }
 
+function getYearCountdown() {
+    const now = new Date();
+    const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+    const diffTime = endOfYear.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const totalDays = 365 + (now.getFullYear() % 4 === 0 ? 1 : 0);
+    const daysPassed = totalDays - diffDays;
+    const progress = (daysPassed / totalDays) * 100;
+
+    return {
+        daysRemaining: diffDays,
+        daysPassed,
+        totalDays,
+        progress,
+        year: now.getFullYear(),
+    };
+}
+
+function getSalaryRemaining(monthlyExpenses: number, salarySettings?: SalarySettings) {
+    if (!salarySettings) {
+        return {
+            remaining: 0,
+            salary: 0,
+            percentUsed: 0,
+        };
+    }
+
+    const remaining = salarySettings.monthly_salary - monthlyExpenses;
+    const percentUsed = (monthlyExpenses / salarySettings.monthly_salary) * 100;
+
+    return {
+        remaining,
+        salary: salarySettings.monthly_salary,
+        percentUsed: Math.min(percentUsed, 100),
+    };
+}
+
 export default async function DashboardPage() {
     const stats = await getStats();
     const recentTasks = await getRecentTasks();
     const activeGoals = await getActiveGoals();
+    const yearCountdown = getYearCountdown();
+    const salaryInfo = getSalaryRemaining(stats.monthlyExpenses, stats.salarySettings);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('th-TH', {
@@ -106,6 +158,87 @@ export default async function DashboardPage() {
             <div className="page-header">
                 <h1 className="page-title">Dashboard</h1>
                 <p className="page-subtitle">ภาพรวมกิจกรรมและสถิติของคุณ</p>
+            </div>
+
+            {/* Year Countdown & Salary Section */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                {/* Year Countdown */}
+                <div className="card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                    <div style={{ padding: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <span style={{ fontSize: '2rem' }}>📅</span>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>ปี {yearCountdown.year}</h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>Year Countdown</p>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '3rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                            {yearCountdown.daysRemaining}
+                            <span style={{ fontSize: '1rem', fontWeight: 'normal', marginLeft: '8px' }}>วัน</span>
+                        </div>
+                        <div style={{ marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', opacity: 0.8, marginBottom: '4px' }}>
+                                <span>ผ่านไปแล้ว {yearCountdown.daysPassed} วัน</span>
+                                <span>{yearCountdown.progress.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${yearCountdown.progress}%`, background: 'white', borderRadius: '4px' }}></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Salary Remaining */}
+                <div className="card" style={{ background: salaryInfo.remaining >= 0 ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' : 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: 'white' }}>
+                    <div style={{ padding: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <span style={{ fontSize: '2rem' }}>💵</span>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>เงินเดือนคงเหลือ</h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>Monthly Budget</p>
+                            </div>
+                        </div>
+                        {salaryInfo.salary > 0 ? (
+                            <>
+                                <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                    {formatCurrency(salaryInfo.remaining)}
+                                </div>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', opacity: 0.8, marginBottom: '4px' }}>
+                                        <span>ใช้ไป {formatCurrency(stats.monthlyExpenses)}</span>
+                                        <span>{salaryInfo.percentUsed.toFixed(1)}%</span>
+                                    </div>
+                                    <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${salaryInfo.percentUsed}%`, background: 'white', borderRadius: '4px' }}></div>
+                                    </div>
+                                </div>
+                                <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.7 }}>จากเงินเดือน {formatCurrency(salaryInfo.salary)}</p>
+                            </>
+                        ) : (
+                            <div>
+                                <p style={{ margin: 0, opacity: 0.9 }}>ยังไม่ได้ตั้งค่าเงินเดือน</p>
+                                <a href="/settings" style={{ color: 'white', textDecoration: 'underline', fontSize: '0.875rem' }}>ตั้งค่าเงินเดือน →</a>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Total Investments */}
+                <div className="card" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                    <div style={{ padding: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <span style={{ fontSize: '2rem' }}>📈</span>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>มูลค่าการลงทุน</h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>Total Investments</p>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                            {formatCurrency(stats.totalInvestments)}
+                        </div>
+                        <a href="/investments" style={{ color: 'white', textDecoration: 'underline', fontSize: '0.875rem' }}>ดูรายละเอียด →</a>
+                    </div>
+                </div>
             </div>
 
             {/* Stats Grid */}
@@ -160,7 +293,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Recent Tasks & Goals */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginTop: '24px' }}>
                 {/* Recent Tasks */}
                 <div className="card">
                     <div className="card-header">
