@@ -186,106 +186,143 @@ export default function InvestmentsPage() {
     }
 
     return (
-        <div className="fade-in">
-            <div className="page-header">
+        <div className="fade-in" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                 <div>
-                    <h1 className="page-title">📈 การลงทุน</h1>
-                    <p className="page-subtitle">จัดการทรัพย์สินและพอร์ตการลงทุน</p>
+                    <h1 className="page-title" style={{ fontSize: '1.5rem' }}>📈 การลงทุน</h1>
+                    <p className="page-subtitle" style={{ fontSize: '0.85rem' }}>จัดการทรัพย์สินและพอร์ตการลงทุน</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ width: '100%' }}>
                     + เพิ่มการลงทุน
                 </button>
             </div>
 
-            {/* Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                <div className="card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '20px' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>มูลค่ารวม</h3>
-                    <p style={{ margin: '8px 0 0', fontSize: '1.75rem', fontWeight: 'bold' }}>{formatCurrency(totalValueTHB)}</p>
+            {/* Summary - 1 main card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '16px', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '0.85rem', opacity: 0.8 }}>💎 มูลค่ารวมทั้งหมด</h3>
+                <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{formatCurrency(totalValueTHB)}</p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
+                    {investmentsByType.slice(0, 3).map(type => (
+                        <span key={type.value} style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+                            {type.label.split(' ')[0]} {formatCurrency(type.total)}
+                        </span>
+                    ))}
                 </div>
-
-                {investmentsByType.slice(0, 3).map(type => (
-                    <div key={type.value} className="card" style={{ padding: '20px', borderLeft: `4px solid ${type.color}` }}>
-                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{type.label}</h3>
-                        <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{formatCurrency(type.total)}</p>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{type.count} รายการ</span>
-                    </div>
-                ))}
             </div>
 
-            {/* Filter */}
-            <div className="filter-tabs" style={{ marginBottom: '20px' }}>
+            {/* Filter - horizontal scroll */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
                 <button
-                    className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
                     onClick={() => setFilter('all')}
+                    style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: filter === 'all' ? 'var(--primary)' : 'var(--bg-card)',
+                        color: filter === 'all' ? 'white' : 'var(--text-secondary)',
+                        fontSize: '0.8rem',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }}
                 >
                     ทั้งหมด
                 </button>
                 {INVESTMENT_TYPES.map(type => (
                     <button
                         key={type.value}
-                        className={`filter-tab ${filter === type.value ? 'active' : ''}`}
                         onClick={() => setFilter(type.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: filter === type.value ? type.color : 'var(--bg-card)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                        }}
                     >
-                        {type.label}
+                        {type.label.split(' ')[0]}
                     </button>
                 ))}
             </div>
 
-            {/* Investment List */}
+            {/* Investment List - Card Layout */}
             <div className="card">
                 {filteredInvestments.length > 0 ? (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                                    <th style={{ padding: '12px', textAlign: 'left' }}>ชื่อ</th>
-                                    <th style={{ padding: '12px', textAlign: 'left' }}>ประเภท</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>จำนวน</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>ราคาซื้อ</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>ราคาปัจจุบัน</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>มูลค่า (THB)</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>กำไร/ขาดทุน</th>
-                                    <th style={{ padding: '12px', textAlign: 'center' }}>จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredInvestments.map(investment => {
-                                    const profit = (Number(investment.current_price) - Number(investment.purchase_price)) * Number(investment.amount);
-                                    const profitPercent = investment.purchase_price > 0
-                                        ? ((Number(investment.current_price) - Number(investment.purchase_price)) / Number(investment.purchase_price)) * 100
-                                        : 0;
-                                    const typeInfo = INVESTMENT_TYPES.find(t => t.value === investment.type);
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {filteredInvestments.map(investment => {
+                            const profit = (Number(investment.current_price) - Number(investment.purchase_price)) * Number(investment.amount);
+                            const profitPercent = investment.purchase_price > 0
+                                ? ((Number(investment.current_price) - Number(investment.purchase_price)) / Number(investment.purchase_price)) * 100
+                                : 0;
+                            const typeInfo = INVESTMENT_TYPES.find(t => t.value === investment.type);
+                            const isProfit = profit >= 0;
 
-                                    return (
-                                        <tr key={investment.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                            <td style={{ padding: '12px' }}>
-                                                <strong>{investment.name}</strong>
-                                                {investment.notes && <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{investment.notes}</p>}
-                                            </td>
-                                            <td style={{ padding: '12px' }}>
-                                                <span style={{ background: typeInfo?.color, color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                                                    {typeInfo?.label}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>{Number(investment.amount).toLocaleString()}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>{formatCurrency(Number(investment.purchase_price), investment.currency)}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>{formatCurrency(Number(investment.current_price), investment.currency)}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(Number(investment.value_thb))}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right', color: profit >= 0 ? '#22c55e' : '#ef4444' }}>
-                                                {profit >= 0 ? '+' : ''}{formatCurrency(profit, investment.currency)}
-                                                <br />
-                                                <span style={{ fontSize: '0.8rem' }}>({profitPercent >= 0 ? '+' : ''}{profitPercent.toFixed(2)}%)</span>
-                                            </td>
-                                            <td style={{ padding: '12px', textAlign: 'center' }}>
-                                                <button className="btn btn-secondary" style={{ marginRight: '8px', padding: '6px 12px' }} onClick={() => openEdit(investment)}>✏️</button>
-                                                <button className="btn btn-danger" style={{ padding: '6px 12px' }} onClick={() => handleDelete(investment.id)}>🗑️</button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                            return (
+                                <div key={investment.id} style={{
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '12px',
+                                    padding: '16px',
+                                    border: '1px solid var(--border)'
+                                }}>
+                                    {/* Header */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '8px' }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <h4 style={{ margin: 0, fontSize: '1rem', wordBreak: 'break-word' }}>{investment.name}</h4>
+                                            <span style={{
+                                                background: typeInfo?.color,
+                                                color: 'white',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '0.7rem',
+                                                display: 'inline-block',
+                                                marginTop: '4px'
+                                            }}>
+                                                {typeInfo?.label}
+                                            </span>
+                                        </div>
+                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                                                {formatCurrency(Number(investment.value_thb))}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: isProfit ? '#22c55e' : '#ef4444' }}>
+                                                {isProfit ? '▲' : '▼'} {profitPercent >= 0 ? '+' : ''}{profitPercent.toFixed(1)}%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Details */}
+                                    <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                        <span>📊 {Number(investment.amount).toLocaleString()} หน่วย</span>
+                                        <span>💰 ซื้อ {formatCurrency(Number(investment.purchase_price), investment.currency)}</span>
+                                        <span style={{ color: isProfit ? '#22c55e' : '#ef4444' }}>
+                                            {isProfit ? '📈' : '📉'} {isProfit ? '+' : ''}{formatCurrency(profit, investment.currency)}
+                                        </span>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            className="btn btn-secondary btn-sm"
+                                            style={{ flex: 1, padding: '10px', fontSize: '0.85rem' }}
+                                            onClick={() => openEdit(investment)}
+                                        >
+                                            ✏️ แก้ไข
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm"
+                                            style={{ width: '44px', padding: '10px' }}
+                                            onClick={() => handleDelete(investment.id)}
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="empty-state">

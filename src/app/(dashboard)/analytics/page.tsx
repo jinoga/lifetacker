@@ -141,13 +141,13 @@ export default function AnalyticsPage() {
     const debtRatio = getDebtToAssetRatio();
 
     return (
-        <div className="fade-in">
-            <div className="page-header">
+        <div className="fade-in" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 <div>
-                    <h1 className="page-title">📊 วิเคราะห์ภาพรวมชีวิต</h1>
-                    <p className="page-subtitle">ประเมินสุขภาพ การเงิน และความสำเร็จ</p>
+                    <h1 className="page-title" style={{ fontSize: '1.5rem' }}>📊 วิเคราะห์ภาพรวมชีวิต</h1>
+                    <p className="page-subtitle" style={{ fontSize: '0.85rem' }}>ประเมินสุขภาพ การเงิน และความสำเร็จ</p>
                 </div>
-                <button className="btn btn-secondary" onClick={() => setShowHealthModal(true)}>
+                <button className="btn btn-secondary" onClick={() => setShowHealthModal(true)} style={{ width: '100%' }}>
                     ⚙️ ตั้งค่าสุขภาพ
                 </button>
             </div>
@@ -156,21 +156,21 @@ export default function AnalyticsPage() {
             <div className="card" style={{
                 background: `linear-gradient(135deg, ${getScoreColor(data?.overallScore || 0)}33 0%, ${getScoreColor(data?.overallScore || 0)}11 100%)`,
                 border: `2px solid ${getScoreColor(data?.overallScore || 0)}`,
-                marginBottom: '24px',
-                padding: '32px',
+                marginBottom: '16px',
+                padding: '20px',
                 textAlign: 'center'
             }}>
-                <h2 style={{ margin: '0 0 8px', fontSize: '1.2rem', color: 'var(--text-secondary)' }}>คะแนนภาพรวมชีวิต</h2>
-                <div style={{ fontSize: '5rem', fontWeight: 'bold', color: getScoreColor(data?.overallScore || 0) }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1rem', color: 'var(--text-secondary)' }}>คะแนนภาพรวมชีวิต</h2>
+                <div style={{ fontSize: '3.5rem', fontWeight: 'bold', color: getScoreColor(data?.overallScore || 0) }}>
                     {data?.overallScore || 0}
                 </div>
-                <p style={{ fontSize: '1.5rem', margin: '8px 0 0', color: getScoreColor(data?.overallScore || 0) }}>
+                <p style={{ fontSize: '1.2rem', margin: '4px 0 0', color: getScoreColor(data?.overallScore || 0) }}>
                     {getScoreLabel(data?.overallScore || 0)}
                 </p>
             </div>
 
             {/* Score Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
                 {/* Financial Score */}
                 <div className="card" style={{ padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Analysis Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Spending Analysis */}
                 <div className="card" style={{ padding: '24px', borderLeft: `4px solid ${spendingStatus.color}` }}>
                     <h3 style={{ margin: '0 0 16px' }}>💸 วิเคราะห์การใช้จ่าย</h3>

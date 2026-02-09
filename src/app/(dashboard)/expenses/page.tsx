@@ -73,40 +73,60 @@ export default function ExpensesPage() {
     }
 
     return (
-        <div className="fade-in">
-            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="fade-in" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 <div>
-                    <h1 className="page-title">💰 Expenses</h1>
-                    <p className="page-subtitle">บันทึกค่าใช้จ่าย</p>
+                    <h1 className="page-title" style={{ fontSize: '1.5rem' }}>💰 Expenses</h1>
+                    <p className="page-subtitle" style={{ fontSize: '0.85rem' }}>บันทึกค่าใช้จ่าย</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ เพิ่มรายจ่าย</button>
+                <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ width: '100%' }}>+ เพิ่มรายจ่าย</button>
             </div>
 
-            {/* Summary */}
-            <div className="stats-grid" style={{ marginBottom: '24px' }}>
-                <div className="stat-card">
-                    <div className="stat-icon danger">💸</div>
-                    <div className="stat-content">
-                        <h3>{formatCurrency(monthlyTotal)}</h3>
-                        <p>รวมทั้งหมด</p>
-                    </div>
+            {/* Summary - Single Card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', padding: '16px', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '0.85rem', opacity: 0.8 }}>💸 รวมใช้จ่ายทั้งหมด</h3>
+                <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{formatCurrency(monthlyTotal)}</p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
+                    {categoryTotals.slice(0, 3).map(cat => (
+                        <span key={cat.value} style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+                            {cat.label.split(' ')[0]} {formatCurrency(cat.total)}
+                        </span>
+                    ))}
                 </div>
-                {categoryTotals.slice(0, 3).map(cat => (
-                    <div key={cat.value} className="stat-card">
-                        <div className="stat-icon" style={{ background: `${cat.color}20`, color: cat.color }}>{cat.label.split(' ')[0]}</div>
-                        <div className="stat-content">
-                            <h3>{formatCurrency(cat.total)}</h3>
-                            <p>{cat.label.split(' ')[1]}</p>
-                        </div>
-                    </div>
-                ))}
             </div>
 
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                <button className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('all')}>ทั้งหมด</button>
+            {/* Filters - horizontal scroll */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
+                <button
+                    onClick={() => setFilter('all')}
+                    style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: filter === 'all' ? 'var(--primary)' : 'var(--bg-card)',
+                        color: filter === 'all' ? 'white' : 'var(--text-secondary)',
+                        fontSize: '0.8rem',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }}
+                >ทั้งหมด</button>
                 {categories.map(cat => (
-                    <button key={cat.value} className={`btn ${filter === cat.value ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter(cat.value)}>{cat.label}</button>
+                    <button
+                        key={cat.value}
+                        onClick={() => setFilter(cat.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: filter === cat.value ? cat.color : 'var(--bg-card)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                        }}
+                    >{cat.label.split(' ')[0]}</button>
                 ))}
             </div>
 
