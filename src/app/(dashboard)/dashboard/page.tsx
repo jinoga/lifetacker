@@ -21,8 +21,53 @@ interface SalarySettings {
     salary_date: number;
 }
 
+// Calculate the last salary date based on salary_date setting
+function getLastSalaryDate(salaryDate: number): Date {
+    const now = new Date();
+    const currentDay = now.getDate();
+
+    let lastSalaryDate: Date;
+
+    if (currentDay >= salaryDate) {
+        // Salary was this month
+        lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDate);
+    } else {
+        // Salary was last month
+        lastSalaryDate = new Date(now.getFullYear(), now.getMonth() - 1, salaryDate);
+    }
+
+    return lastSalaryDate;
+}
+
+// Calculate next salary date
+function getNextSalaryDate(salaryDate: number): Date {
+    const now = new Date();
+    const currentDay = now.getDate();
+
+    let nextSalaryDate: Date;
+
+    if (currentDay >= salaryDate) {
+        // Next salary is next month
+        nextSalaryDate = new Date(now.getFullYear(), now.getMonth() + 1, salaryDate);
+    } else {
+        // Next salary is this month
+        nextSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDate);
+    }
+
+    return nextSalaryDate;
+}
+
 async function getStats() {
     try {
+        // First get salary settings to know the salary date
+        const salaryResult = await sql`SELECT monthly_salary, salary_date FROM salary_settings LIMIT 1`;
+        const salarySettings = salaryResult.rows[0] as unknown as SalarySettings | undefined;
+        const salaryDate = salarySettings?.salary_date || 25;
+
+        // Calculate the date range for expenses (from last salary date)
+        const lastSalaryDate = getLastSalaryDate(salaryDate);
+        const lastSalaryDateStr = lastSalaryDate.toISOString().split('T')[0];
+
         const [
             tasksResult,
             completedTasksResult,
@@ -30,16 +75,14 @@ async function getStats() {
             goalsResult,
             expensesResult,
             wishlistResult,
-            salaryResult,
             investmentResult,
         ] = await Promise.all([
             sql`SELECT COUNT(*) as count FROM tasks WHERE status = 'pending'`,
             sql`SELECT COUNT(*) as count FROM tasks WHERE status = 'completed'`,
             sql`SELECT COUNT(*) as count FROM habits`,
             sql`SELECT COUNT(*) as count FROM goals`,
-            sql`SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE date >= DATE_TRUNC('month', CURRENT_DATE)`,
+            sql`SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE date >= ${lastSalaryDateStr}::date`,
             sql`SELECT COUNT(*) as count FROM wishlist WHERE purchased = false`,
-            sql`SELECT monthly_salary, salary_date FROM salary_settings LIMIT 1`,
             sql`SELECT COALESCE(SUM(value_thb), 0) as total FROM investments`,
         ]);
 
@@ -50,8 +93,10 @@ async function getStats() {
             goals: Number(goalsResult.rows[0]?.count || 0),
             monthlyExpenses: Number(expensesResult.rows[0]?.total || 0),
             wishlistItems: Number(wishlistResult.rows[0]?.count || 0),
-            salarySettings: salaryResult.rows[0] as unknown as SalarySettings | undefined,
+            salarySettings,
             totalInvestments: Number(investmentResult.rows[0]?.total || 0),
+            lastSalaryDate,
+            nextSalaryDate: getNextSalaryDate(salaryDate),
         };
     } catch {
         return {
@@ -63,6 +108,8 @@ async function getStats() {
             wishlistItems: 0,
             salarySettings: undefined,
             totalInvestments: 0,
+            lastSalaryDate: new Date(),
+            nextSalaryDate: new Date(),
         };
     }
 }
@@ -195,7 +242,9 @@ export default async function DashboardPage() {
                             <span style={{ fontSize: '2rem' }}>💵</span>
                             <div>
                                 <h3 style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>เงินเดือนคงเหลือ</h3>
-                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>Monthly Budget</p>
+                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>
+                                    {stats.lastSalaryDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - {stats.nextSalaryDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+                                </p>
                             </div>
                         </div>
                         {salaryInfo.salary > 0 ? (
@@ -212,7 +261,10 @@ export default async function DashboardPage() {
                                         <div style={{ height: '100%', width: `${salaryInfo.percentUsed}%`, background: 'white', borderRadius: '4px' }}></div>
                                     </div>
                                 </div>
-                                <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.7 }}>จากเงินเดือน {formatCurrency(salaryInfo.salary)}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', opacity: 0.7 }}>
+                                    <span>เงินเดือน {formatCurrency(salaryInfo.salary)}</span>
+                                    <span>เงินเดือนถัดไป: {stats.nextSalaryDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</span>
+                                </div>
                             </>
                         ) : (
                             <div>
