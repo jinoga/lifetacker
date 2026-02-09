@@ -212,53 +212,65 @@ export default function DebtsPage() {
     }
 
     return (
-        <div className="fade-in">
-            <div className="page-header">
+        <div className="fade-in" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                 <div>
-                    <h1 className="page-title">💳 หนี้สิน</h1>
-                    <p className="page-subtitle">ติดตามหนี้บัตรเครดิตและการผ่อนชำระ</p>
+                    <h1 className="page-title" style={{ fontSize: '1.5rem' }}>💳 หนี้สิน</h1>
+                    <p className="page-subtitle" style={{ fontSize: '0.85rem' }}>ติดตามหนี้บัตรเครดิตและการผ่อนชำระ</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ width: '100%' }}>
                     + เพิ่มหนี้
                 </button>
             </div>
 
-            {/* Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                <div className="card" style={{ background: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: 'white', padding: '20px' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>หนี้คงเหลือทั้งหมด</h3>
-                    <p style={{ margin: '8px 0 0', fontSize: '1.75rem', fontWeight: 'bold' }}>{formatCurrency(totalDebt)}</p>
+            {/* Summary Cards - 2 cards only for mobile */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: 'white', padding: '12px' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8 }}>หนี้คงเหลือ</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: 'bold' }}>{formatCurrency(totalDebt)}</p>
                 </div>
 
-                <div className="card" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', padding: '20px' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>ต้องจ่ายต่อเดือน</h3>
-                    <p style={{ margin: '8px 0 0', fontSize: '1.75rem', fontWeight: 'bold' }}>{formatCurrency(totalMonthlyPayment)}</p>
+                <div className="card" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', padding: '12px' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8 }}>จ่าย/เดือน</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: 'bold' }}>{formatCurrency(totalMonthlyPayment)}</p>
                 </div>
-
-                {debtsByType.slice(0, 2).map(type => (
-                    <div key={type.value} className="card" style={{ padding: '20px', borderLeft: `4px solid ${type.color}` }}>
-                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{type.label}</h3>
-                        <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{formatCurrency(type.total)}</p>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{type.count} รายการ</span>
-                    </div>
-                ))}
             </div>
 
-            {/* Filter */}
-            <div className="filter-tabs" style={{ marginBottom: '20px' }}>
+            {/* Filter - horizontal scroll */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
                 <button
-                    className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
                     onClick={() => setFilter('all')}
+                    style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: filter === 'all' ? 'var(--primary)' : 'var(--bg-card)',
+                        color: filter === 'all' ? 'white' : 'var(--text-secondary)',
+                        fontSize: '0.8rem',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }}
                 >
                     ทั้งหมด
                 </button>
                 {DEBT_TYPES.map(type => (
                     <button
                         key={type.value}
-                        className={`filter-tab ${filter === type.value ? 'active' : ''}`}
                         onClick={() => setFilter(type.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: filter === type.value ? type.color : 'var(--bg-card)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                        }}
                     >
-                        {type.label}
+                        {type.label.split(' ')[0]}
                     </button>
                 ))}
             </div>
