@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 const navItems = [
     { href: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { href: '/analytics', icon: '📈', label: 'วิเคราะห์ชีวิต' },
     { href: '/tasks', icon: '✅', label: 'Tasks' },
     { href: '/habits', icon: '🔄', label: 'Habits' },
     { href: '/goals', icon: '🎯', label: 'Goals' },
@@ -12,7 +13,7 @@ const navItems = [
     { href: '/expenses', icon: '💰', label: 'Expenses' },
     { href: '/wishlist', icon: '💝', label: 'Wishlist' },
     { href: '/debts', icon: '💳', label: 'Debts' },
-    { href: '/investments', icon: '📈', label: 'Investments' },
+    { href: '/investments', icon: '💎', label: 'Investments' },
     { href: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 
