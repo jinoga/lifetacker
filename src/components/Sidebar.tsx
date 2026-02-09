@@ -11,6 +11,7 @@ const navItems = [
     { href: '/timetracker', icon: '⏱️', label: 'Time Tracker' },
     { href: '/expenses', icon: '💰', label: 'Expenses' },
     { href: '/wishlist', icon: '💝', label: 'Wishlist' },
+    { href: '/debts', icon: '💳', label: 'Debts' },
     { href: '/investments', icon: '📈', label: 'Investments' },
     { href: '/settings', icon: '⚙️', label: 'Settings' },
 ];
