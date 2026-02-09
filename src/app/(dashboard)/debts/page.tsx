@@ -266,60 +266,90 @@ export default function DebtsPage() {
             {/* Debt List */}
             <div className="card">
                 {filteredDebts.length > 0 ? (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                                    <th style={{ padding: '12px', textAlign: 'left' }}>ชื่อ</th>
-                                    <th style={{ padding: '12px', textAlign: 'left' }}>ประเภท</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>ยอดทั้งหมด</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>คงเหลือ</th>
-                                    <th style={{ padding: '12px', textAlign: 'right' }}>จ่าย/เดือน</th>
-                                    <th style={{ padding: '12px', textAlign: 'center' }}>วันครบกำหนด</th>
-                                    <th style={{ padding: '12px', textAlign: 'center' }}>ความคืบหน้า</th>
-                                    <th style={{ padding: '12px', textAlign: 'center' }}>จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredDebts.map(debt => {
-                                    const progress = debt.total_amount > 0
-                                        ? ((Number(debt.total_amount) - Number(debt.remaining_amount)) / Number(debt.total_amount)) * 100
-                                        : 0;
-                                    const typeInfo = DEBT_TYPES.find(t => t.value === debt.type);
+                    <div className="debt-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {filteredDebts.map(debt => {
+                            const progress = debt.total_amount > 0
+                                ? ((Number(debt.total_amount) - Number(debt.remaining_amount)) / Number(debt.total_amount)) * 100
+                                : 0;
+                            const typeInfo = DEBT_TYPES.find(t => t.value === debt.type);
 
-                                    return (
-                                        <tr key={debt.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                            <td style={{ padding: '12px' }}>
-                                                <strong>{debt.name}</strong>
-                                                {debt.notes && <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{debt.notes}</p>}
-                                            </td>
-                                            <td style={{ padding: '12px' }}>
-                                                <span style={{ background: typeInfo?.color, color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                                                    {typeInfo?.label}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>{formatCurrency(Number(debt.total_amount))}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#ef4444' }}>{formatCurrency(Number(debt.remaining_amount))}</td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>{formatCurrency(Number(debt.monthly_payment))}</td>
-                                            <td style={{ padding: '12px', textAlign: 'center' }}>วันที่ {debt.due_date}</td>
-                                            <td style={{ padding: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <div style={{ flex: 1, height: '8px', background: 'var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                                        <div style={{ height: '100%', width: `${progress}%`, background: '#22c55e', borderRadius: '4px' }}></div>
-                                                    </div>
-                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{progress.toFixed(0)}%</span>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '12px', textAlign: 'center' }}>
-                                                <button className="btn btn-success" style={{ marginRight: '4px', padding: '6px 10px', fontSize: '0.8rem' }} onClick={() => openPaymentModal(debt.id)}>💵 จ่าย</button>
-                                                <button className="btn btn-secondary" style={{ marginRight: '4px', padding: '6px 10px' }} onClick={() => openEdit(debt)}>✏️</button>
-                                                <button className="btn btn-danger" style={{ padding: '6px 10px' }} onClick={() => handleDelete(debt.id)}>🗑️</button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                            return (
+                                <div key={debt.id} style={{
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '12px',
+                                    padding: '16px',
+                                    border: '1px solid var(--border)'
+                                }}>
+                                    {/* Header: Name + Type */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '8px' }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <h4 style={{ margin: 0, fontSize: '1rem', wordBreak: 'break-word' }}>{debt.name}</h4>
+                                            <span style={{
+                                                background: typeInfo?.color,
+                                                color: 'white',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '0.7rem',
+                                                display: 'inline-block',
+                                                marginTop: '4px'
+                                            }}>
+                                                {typeInfo?.label}
+                                            </span>
+                                        </div>
+                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>
+                                                {formatCurrency(Number(debt.remaining_amount))}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                คงเหลือ
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                            <span>ชำระแล้ว {progress.toFixed(0)}%</span>
+                                            <span>ครบกำหนดวันที่ {debt.due_date}</span>
+                                        </div>
+                                        <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: `${progress}%`, background: '#22c55e', borderRadius: '3px' }}></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info Row */}
+                                    <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                        <span>💰 จ่าย/ด: {formatCurrency(Number(debt.monthly_payment))}</span>
+                                        <span>📊 ยอดรวม: {formatCurrency(Number(debt.total_amount))}</span>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            className="btn btn-success btn-sm"
+                                            style={{ flex: 1, padding: '10px', fontSize: '0.85rem' }}
+                                            onClick={() => openPaymentModal(debt.id)}
+                                        >
+                                            💵 จ่าย
+                                        </button>
+                                        <button
+                                            className="btn btn-secondary btn-sm"
+                                            style={{ width: '44px', padding: '10px' }}
+                                            onClick={() => openEdit(debt)}
+                                        >
+                                            ✏️
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm"
+                                            style={{ width: '44px', padding: '10px' }}
+                                            onClick={() => handleDelete(debt.id)}
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="empty-state">
